@@ -97,6 +97,7 @@ public class UploadImageFragment extends Fragment implements ChooseDialogFragmen
                 Toast.makeText(mContext, "Unexpected Error Happened while capturing the picture!", Toast.LENGTH_SHORT).show();
             } else {
                 Bitmap capturedImage = (Bitmap) data.getExtras().get("data");
+                //TODO : data.getData() return null in most devices! try to find fix!
                 mImageUri = data.getData(); //uri
                 ivImg.setImageBitmap(capturedImage);
 

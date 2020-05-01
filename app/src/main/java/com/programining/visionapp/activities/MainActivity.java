@@ -8,6 +8,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.programining.visionapp.R;
+import com.programining.visionapp.fragments.UploadImageFragment;
 import com.programining.visionapp.interfaces.MediatorInterface;
 
 public class MainActivity extends AppCompatActivity implements MediatorInterface {
@@ -16,6 +17,7 @@ public class MainActivity extends AppCompatActivity implements MediatorInterface
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        changeFragmentTo(new UploadImageFragment(), UploadImageFragment.class.getSimpleName());
     }
 
     /**
