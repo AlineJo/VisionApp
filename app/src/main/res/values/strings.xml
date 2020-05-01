@@ -3,4 +3,11 @@
     <string name="btn_open_camera">Open Camera</string>
     <string name="btn_open_gallery">Open Gallery</string>
     <string name="label_choose_dialog">Which one you would like to Open</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="btn_choose_image">Choose Image</string>
+    <string name="btn_upload_image">Upload Image</string>
+    <string name="label_labels">Labels:</string>
+    <string name="lable_3dots">...</string>
 </resources>
