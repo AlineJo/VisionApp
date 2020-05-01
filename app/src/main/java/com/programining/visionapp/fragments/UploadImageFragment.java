@@ -39,7 +39,6 @@ import com.google.api.services.vision.v1.model.Feature;
 import com.google.api.services.vision.v1.model.Image;
 import com.programining.visionapp.R;
 import com.programining.visionapp.dialogfragments.ChooseDialogFragment;
-import com.programining.visionapp.models.MyConstants;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -223,7 +222,7 @@ public class UploadImageFragment extends Fragment implements ChooseDialogFragmen
                             null);
 
                     visionBuilder.setVisionRequestInitializer(
-                            new VisionRequestInitializer(MyConstants.KEY_VISION_API_KEY));
+                            new VisionRequestInitializer(mContext.getString(R.string.google_vision_api_key)));
                     Vision vision = visionBuilder.build();
 
                     /** API KEY End**/
