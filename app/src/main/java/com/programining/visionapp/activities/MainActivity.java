@@ -1,8 +1,10 @@
-package com.programining.visionapp;
+package com.programining.visionapp.activities;
+
+import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.os.Bundle;
+import com.programining.visionapp.R;
 
 public class MainActivity extends AppCompatActivity {
 
