@@ -72,6 +72,7 @@ public class UploadImageFragment extends Fragment implements ChooseDialogFragmen
     }
 
 
+
     @Override
     public void openGallery() {
         Intent i = new Intent();
@@ -98,7 +99,7 @@ public class UploadImageFragment extends Fragment implements ChooseDialogFragmen
             } else {
                 Bitmap capturedImage = (Bitmap) data.getExtras().get("data");
                 //TODO : data.getData() return null in most devices! try to find fix!
-                mImageUri = data.getData(); //uri
+                mImageUri = data.getData(); //data.getData() (BUG) - return null in most devices!
                 ivImg.setImageBitmap(capturedImage);
 
             }
