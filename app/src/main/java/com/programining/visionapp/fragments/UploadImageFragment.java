@@ -6,8 +6,10 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -23,12 +25,29 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.google.api.client.extensions.android.json.AndroidJsonFactory;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.services.vision.v1.Vision;
+import com.google.api.services.vision.v1.VisionRequestInitializer;
+import com.google.api.services.vision.v1.model.AnnotateImageRequest;
+import com.google.api.services.vision.v1.model.BatchAnnotateImagesRequest;
+import com.google.api.services.vision.v1.model.BatchAnnotateImagesResponse;
+import com.google.api.services.vision.v1.model.EntityAnnotation;
+import com.google.api.services.vision.v1.model.FaceAnnotation;
+import com.google.api.services.vision.v1.model.Feature;
+import com.google.api.services.vision.v1.model.Image;
 import com.programining.visionapp.R;
 import com.programining.visionapp.dialogfragments.ChooseDialogFragment;
+import com.programining.visionapp.models.MyConstants;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -176,8 +195,199 @@ public class UploadImageFragment extends Fragment implements ChooseDialogFragmen
         }
     }
 
+    /**
+     * upload image to vision
+     */
     private void uploadImageToVision() throws IOException {
+        tvResults.setText("Retrieving results from cloud");
+        new AsyncTask<Object, Void, String>() {
+            @Override
+            protected String doInBackground(Object... params) {
+                try {
 
+                    /** OAuth Based **/
+
+//                    GoogleCredential credential = new GoogleCredential().setAccessToken(accessToken);
+//                    HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
+//                    JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
+//                    Vision.Builder builder = new Vision.Builder
+//                            (httpTransport, jsonFactory, credential);
+//                    Vision vision = builder.build();
+                    /** OAuth Based **/
+
+
+                    /** API KEY **/
+                    Vision.Builder visionBuilder = new Vision.Builder(
+                            new NetHttpTransport(),
+                            new AndroidJsonFactory(),
+                            null);
+
+                    visionBuilder.setVisionRequestInitializer(
+                            new VisionRequestInitializer(MyConstants.KEY_VISION_API_KEY));
+                    Vision vision = visionBuilder.build();
+
+                    /** API KEY End**/
+
+
+                    List<Feature> featureList = new ArrayList<>();
+
+                    switch (mCurrentSelectedDetection) {
+                        case 0:     //Text Detection
+                            Feature textDetection = new Feature();
+                            textDetection.setType("TEXT_DETECTION");
+                            textDetection.setMaxResults(10);
+                            featureList.add(textDetection);
+                            break;
+                        case 1:     //Label Detection
+                            Feature labelDetection = new Feature();
+                            labelDetection.setType("LABEL_DETECTION");
+                            labelDetection.setMaxResults(10);
+                            featureList.add(labelDetection);
+                            break;
+                        case 2:     //Landmark Detection
+                            Feature landmarkDetection = new Feature();
+                            landmarkDetection.setType("LANDMARK_DETECTION");
+                            landmarkDetection.setMaxResults(10);
+                            featureList.add(landmarkDetection);
+                            break;
+                        case 3:     //Facial Detection
+                            Feature desiredFeature = new Feature();
+                            desiredFeature.setType("FACE_DETECTION");
+                            desiredFeature.setMaxResults(10);
+                            featureList.add(desiredFeature);
+                        case 4:     //Logo Detection
+                            Feature logoDetection = new Feature();
+                            logoDetection.setType("LOGO_DETECTION");
+                            logoDetection.setMaxResults(10);
+                            featureList.add(logoDetection);
+                            break;
+                        case 5:
+                            break;
+                        case 6:
+                            break;
+                        case 7:
+                            break;
+                    }
+
+                    List<AnnotateImageRequest> imageList = new ArrayList<>();
+                    AnnotateImageRequest annotateImageRequest = new AnnotateImageRequest();
+                    Image base64EncodedImage = getBase64EncodedJpeg(mImageBitmap);
+                    annotateImageRequest.setImage(base64EncodedImage);
+                    annotateImageRequest.setFeatures(featureList);
+                    imageList.add(annotateImageRequest);
+                    BatchAnnotateImagesRequest batchAnnotateImagesRequest =
+                            new BatchAnnotateImagesRequest();
+                    batchAnnotateImagesRequest.setRequests(imageList);
+                    Vision.Images.Annotate annotateRequest =
+                            vision.images().annotate(batchAnnotateImagesRequest);
+                    // Due to a bug: requests to Vision API containing large images fail when GZipped.
+                    annotateRequest.setDisableGZipContent(true);
+                    Log.d(KEY_TAG, "sending request");
+                    BatchAnnotateImagesResponse response = annotateRequest.execute();
+                    return convertResponseToString(response, mCurrentSelectedDetection);
+                } catch (GoogleJsonResponseException e) {
+                    Log.e(KEY_TAG, "Request failed: " + e.getContent());
+                } catch (IOException e) {
+                    Log.d(KEY_TAG, "Request failed: " + e.getMessage());
+                }
+                return "Cloud Vision API request failed.";
+            }
+
+            protected void onPostExecute(String result) {
+                tvResults.setText(result);
+
+
+            }
+        }.execute();
+
+    }
+
+    private Image getBase64EncodedJpeg(Bitmap bitmap) {
+        Image image = new Image();
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStream);
+        byte[] imageBytes = byteArrayOutputStream.toByteArray();
+        image.encodeContent(imageBytes);
+        return image;
+    }
+
+    private String convertResponseToString(BatchAnnotateImagesResponse response, int mCurrentSelectedDetection) {
+        StringBuilder message = new StringBuilder("Results:\n\n");
+
+        switch (mCurrentSelectedDetection) {
+            case 0:
+                message.append("Texts:\n");
+                List<EntityAnnotation> texts = response.getResponses().get(0)
+                        .getTextAnnotations();
+                if (texts != null) {
+                    for (EntityAnnotation text : texts) {
+                        message.append(String.format(Locale.getDefault(), "%s: %s",
+                                text.getLocale(), text.getDescription()));
+                        message.append("\n");
+                    }
+                } else {
+                    message.append("nothing\n");
+                }
+                break;
+            case 1:
+                List<EntityAnnotation> labels = response.getResponses().get(0).getLabelAnnotations();
+                if (labels != null) {
+                    for (EntityAnnotation label : labels) {
+                        message.append(String.format(Locale.getDefault(), "%.3f: %s",
+                                label.getScore(), label.getDescription()));
+                        message.append("\n");
+                    }
+                } else {
+                    message.append("nothing\n");
+                }
+                break;
+            case 2:
+                message.append("Landmarks:\n");
+                List<EntityAnnotation> landmarks = response.getResponses().get(0)
+                        .getLandmarkAnnotations();
+                if (landmarks != null) {
+                    for (EntityAnnotation landmark : landmarks) {
+                        message.append(String.format(Locale.getDefault(), "%.3f: %s",
+                                landmark.getScore(), landmark.getDescription()));
+                        message.append("\n");
+                    }
+                } else {
+                    message.append("nothing\n");
+                }
+                break;
+            case 3:
+                message.append("Face Detection:\n");
+                List<FaceAnnotation> faces = response.getResponses().get(0)
+                        .getFaceAnnotations();
+                if (faces != null) {
+                    for (FaceAnnotation face : faces) {
+                        message.append(String.format(Locale.getDefault(), "%s",
+                                face.getJoyLikelihood()));
+                        message.append("\n");
+                    }
+                } else {
+                    message.append("nothing\n");
+                }
+                break;
+            case 4:
+                message.append("Logo Detection:\n");
+                List<EntityAnnotation> logos = response.getResponses().get(0)
+                        .getLogoAnnotations();
+                if (logos != null) {
+                    for (EntityAnnotation logo : logos) {
+                        message.append(String.format(Locale.getDefault(), "%s",
+                                logo.getDescription()));
+                        message.append("\n");
+                    }
+                } else {
+                    message.append("nothing\n");
+                }
+                break;
+
+
+        }
+
+        return message.toString();
     }
 
 
