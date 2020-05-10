@@ -204,9 +204,7 @@ public class UploadImageFragment extends Fragment implements ChooseDialogFragmen
             @Override
             protected String doInBackground(Object... params) {
                 try {
-
                     /** OAuth Based **/
-
 //                    GoogleCredential credential = new GoogleCredential().setAccessToken(accessToken);
 //                    HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
 //                    JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
@@ -274,6 +272,7 @@ public class UploadImageFragment extends Fragment implements ChooseDialogFragmen
                     Image base64EncodedImage = getBase64EncodedJpeg(mImageBitmap);
                     annotateImageRequest.setImage(base64EncodedImage);
                     annotateImageRequest.setFeatures(featureList);
+
                     imageList.add(annotateImageRequest);
                     BatchAnnotateImagesRequest batchAnnotateImagesRequest =
                             new BatchAnnotateImagesRequest();
@@ -283,7 +282,7 @@ public class UploadImageFragment extends Fragment implements ChooseDialogFragmen
                     // Due to a bug: requests to Vision API containing large images fail when GZipped.
                     annotateRequest.setDisableGZipContent(true);
                     Log.d(KEY_TAG, "sending request");
-                    BatchAnnotateImagesResponse response = annotateRequest.execute();
+                    BatchAnnotateImagesResponse response = annotateRequest.execute();// send img to vision + get response
                     return convertResponseToString(response, mCurrentSelectedDetection);
                 } catch (GoogleJsonResponseException e) {
                     Log.e(KEY_TAG, "Request failed: " + e.getContent());
